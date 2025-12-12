@@ -171,12 +171,12 @@ void GimbalInit()
        },
        .controller_param_init_config = {
            .angle_PID = {
-                .Kp = 0.15,            // 0.17
+                .Kp = 0.21,            // 0.17
                 .Ki = 0.006,              //  0.008
                 .Kd = 0.01,            //0.008
                 .CoefA = 0.5,          // 0.5
                 .CoefB = 0.6,          // 0.6
-                .DeadBand = 0.005,     // 0.005
+                .DeadBand = 0.00001,     // 0.005
                 .Output_LPF_RC = 0.01, // 0.01
                 .Improve = PID_Trapezoid_Intergral | PID_ChangingIntegrationRate | PID_Integral_Limit | PID_OutputFilter | PID_DerivativeFilter,
                 .IntegralLimit = 1, // 1
@@ -203,12 +203,12 @@ void GimbalInit()
        },
        .controller_param_init_config = {
            .angle_PID = {
-                .Kp = 0.2,           // 减小Kp从0.2到0.15
+                .Kp = 0.18,           // 减小Kp从0.2到0.15
                 .Ki = 0.1,              // 保持或减小
-                .Kd = 0.004,      // 0.006
+                .Kd = 0.006,      // 0.006
                 .CoefA = 0.5,          // 0.5
                 .CoefB = 0.6,          // 0.6
-                .DeadBand = 0.1,     // 0.005
+                .DeadBand = 0.0001,     // 0.005
                 .Output_LPF_RC = 0.01, // 0.01
                 .Improve = PID_Trapezoid_Intergral | PID_ChangingIntegrationRate | PID_Integral_Limit | PID_OutputFilter | PID_DerivativeFilter,
                 .IntegralLimit = 1, // 1
