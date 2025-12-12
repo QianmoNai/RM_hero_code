@@ -15,6 +15,7 @@
 extern imu_t imu;
 extern INS_t INS;
 extern Chassis_Upload_Data_s chassis_fetch_data;
+extern Chassis_Ctrl_Cmd_s chassis_cmd_send;
 
 static uint8_t idx;
 static DMMotorInstance *dm_motor_instance[DM_MOTOR_CNT];
