@@ -69,7 +69,7 @@ int32_t OSPI_Status ; 		 //����־λ
 uint8_t  W25Qxx_WriteBuffer[W25Qxx_NumByteToTest];		//	д��������
 uint8_t  W25Qxx_ReadBuffer[W25Qxx_NumByteToTest];		//	����������
 
-// 注册CAN实例测试
+// 注册CAN实例
 CANInstance* can3_instance;
 CANInstance* can1_instance;
 CANInstance* can1_instance2;
@@ -77,6 +77,8 @@ CANInstance* can2_instance;
 extern DMMotorInstance *dmmotor_yaw1;
 extern DMMotorInstance *dmmotor_yaw2;
 extern DMMotorInstance *dmmotor_pitch;
+
+int a=1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
