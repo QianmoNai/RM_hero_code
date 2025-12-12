@@ -222,19 +222,23 @@ float loader_angle_feedback;
 float pitch_1_angle_feedback;
 
 float speed_ref;
+
 float set1=0,set2=0,set=0,set3=0,last_set=0;
+//set1用于yaw1电机设定值，set2用于yaw2电机设定值，set3用于拨弹盘电机设定值,set用于拨弹盘电机设定值
+//last_set用于拨弹盘电机设置零点标志位
 float err_feedback;//大小yaw同时动，大yaw给小yaw的前馈
 float err_feedback1;//小yaw超限，小yaw给大yaw的前馈
 uint8_t begain_fack_flag = 0;
 float angle_feedback_difference=0.0f;
 float imu_angle_difference=0.0f;
-uint8_t protect_flag = 0,set_zero_flag=0;
+uint8_t protect_flag = 0,protect_flag_count=0;
 float loader_set=0.0f;
 
 float motor_position_angle_now=0.0f;
 //@Todo: 
 
 float forword_sppeed_feedback=0.0f;
+float err;
 void DMMotorTask(void const *argument)
 {
     DMMotorInstance *motor = (DMMotorInstance *)argument;
@@ -310,6 +314,8 @@ void DMMotorTask(void const *argument)
                 err_feedback=speed_ref;
 
                 speed_ref+=chassis_fetch_data.real_wz;
+                chassis_fetch_data.real_wz=0;
+
                 speed_ref-=err_feedback1;
                 err_feedback1 = 0.0f;
                 
@@ -362,21 +368,46 @@ void DMMotorTask(void const *argument)
                 motor_send_mailbox.Kp = 0x0F6; 
                 motor_send_mailbox.Kd = 0x4CD;
                 pitch_1_angle_feedback=set; 
-            }
-            else if(setting->outer_loop_type == SPEED_LOOP)
-            {
-                // motor_send_mailbox.Kp = 0x0F6; 
-                // motor_send_mailbox.Kd = 0x4CD; 
-                motor_send_mailbox.Kp = 0x150; 
-                motor_send_mailbox.Kd = 0x19A; 
-                if(set<last_set)
-                {DMMotorCaliEncoder(motor);}
-                last_set=set;
-            }
-
                 motor_send_mailbox.position_des = float_to_uint(set, DM_P_MIN, DM_P_MAX, 16);
                 motor_send_mailbox.velocity_des = float_to_uint(0, DM_V_MIN, DM_V_MAX, 12);
                 motor_send_mailbox.torque_des = float_to_uint(0, DM_T_MIN, DM_T_MAX, 12);
+            }
+            else if(setting->outer_loop_type == SPEED_LOOP)//拨弹盘电机
+            {
+                //得控恢复
+                if(motor->stop_flag == MOTOR_STOP)
+                {protect_flag==0;}
+
+                //过载保护
+                if(motor->measure.torque>8)
+                {protect_flag_count++;protect_flag=1;}
+
+                float motor_measure_position=motor->measure.position;
+                err=set-motor_measure_position;
+                if(err>12.5664)
+                {err-=25.1328;}
+                else if(err<-12.5664)
+                {err+=25.1328;}
+                speed_ref=PIDCalculate(&motor->angle_PID, 0, err)*10;
+                loader_angle_feedback=speed_ref;
+
+
+                motor_send_mailbox.position_des = float_to_uint(0, DM_P_MIN, DM_P_MAX, 16);
+                motor_send_mailbox.velocity_des = float_to_uint(speed_ref, DM_V_MIN, DM_V_MAX, 12);
+                motor_send_mailbox.torque_des = float_to_uint(0, DM_T_MIN, DM_T_MAX, 12);
+
+                
+                // motor_send_mailbox.Kp = 0x0F6; 
+                // motor_send_mailbox.Kd = 0x4CD; 
+                // motor_send_mailbox.Kp = 0x150; 
+                motor_send_mailbox.Kp = 0;
+                motor_send_mailbox.Kd = 0x500; 
+                // if(set<last_set)
+                // {DMMotorCaliEncoder(motor);}
+                // last_set=set;
+            }
+
+
            
                 // motor->motor_can_instace->tx_buff[0] = (uint8_t)(motor_send_mailbox.position_des >> 8);
                 // motor->motor_can_instace->tx_buff[1] = (uint8_t)(motor_send_mailbox.position_des);
@@ -409,6 +440,9 @@ void DMMotorTask(void const *argument)
         }
         else {
             // 力矩控制模式
+            set3= motor->pid_ref;
+            speed_ref=PIDCalculate(&motor->angle_PID, motor->measure.position, set3);
+            
             LIMIT_MIN_MAX(set, DM_T_MIN, DM_T_MAX);
             motor_send_mailbox.position_des = float_to_uint(0, DM_P_MIN, DM_P_MAX, 16);
             motor_send_mailbox.velocity_des = float_to_uint(0, DM_V_MIN, DM_V_MAX, 12);
@@ -424,6 +458,7 @@ void DMMotorTask(void const *argument)
             motor_send_mailbox.Kp = 0;
             motor_send_mailbox.Kd = 0;
         }
+        
 
         motor->motor_can_instace->tx_buff[0] = (uint8_t)(motor_send_mailbox.position_des >> 8);
         motor->motor_can_instace->tx_buff[1] = (uint8_t)(motor_send_mailbox.position_des);

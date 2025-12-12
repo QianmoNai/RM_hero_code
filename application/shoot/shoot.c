@@ -126,18 +126,18 @@ void ShootInit()
          .rx_id = 15
        },
        .controller_param_init_config = {
-        //    .angle_PID = {
-        //         .Kp = 0.2,           // 减小Kp从0.2到0.15
-        //         .Ki = 0.1,              // 保持或减小
-        //         .Kd = 0.004,      // 0.006
-        //         .CoefA = 0.5,          // 0.5
-        //         .CoefB = 0.6,          // 0.6
-        //         .DeadBand = 1,     // 0.005
-        //         .Output_LPF_RC = 0.01, // 0.01
-        //         .Improve = PID_Trapezoid_Intergral | PID_ChangingIntegrationRate | PID_Integral_Limit | PID_OutputFilter | PID_DerivativeFilter,
-        //         .IntegralLimit = 1, // 1
-        //         .MaxOut = 45,      // 600
-        //     },
+           .angle_PID = {
+                .Kp = 1.0,           // 减小Kp从0.2到0.15
+                .Ki = 0.1,              // 保持或减小
+                .Kd = 0.004,      // 0.006
+                .CoefA = 0.5,          // 0.5
+                .CoefB = 0.6,          // 0.6
+                .DeadBand = 0.00001,     // 0.005
+                .Output_LPF_RC = 0.01, // 0.01
+                .Improve = PID_Trapezoid_Intergral | PID_ChangingIntegrationRate | PID_Integral_Limit | PID_OutputFilter | PID_DerivativeFilter,
+                .IntegralLimit = 1, // 1
+                .MaxOut = 45,      // 600
+            },
         },
         .controller_setting_init_config = {
             .angle_feedback_source = MOTOR_FEED,
@@ -186,12 +186,15 @@ void ShootTask()
         {
             if(count==shoot_cmd_recv.shoot_rate)
             {
-                count=0;angle+=2.110746f;
-                if(angle>=5)
-                {  
-                    angle=2.110746f;
-                }
+                angle+=2.0944;
+                if (angle>12.5664)
+                {angle-=25.1328;}
                 DMMotorSetRef(dmmotor_loader, angle);
+                // count=0;angle+=2.110746f;
+                // if(angle>=5)
+                // {  
+                //     angle=2.110746f;
+                // }
             }
             count++;
         }
@@ -229,8 +232,8 @@ void ShootTask()
                 DJIMotorSetRef(friction_r, 40000);
                 break;
             }
-            DJIMotorSetRef(friction_l, 30000);
-            DJIMotorSetRef(friction_r, 30000);
+            DJIMotorSetRef(friction_l, 15000);
+            DJIMotorSetRef(friction_r, 15000);
         }
         else // 关闭摩擦轮/
         {
