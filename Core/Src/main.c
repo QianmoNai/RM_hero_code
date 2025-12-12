@@ -73,12 +73,13 @@ uint8_t  W25Qxx_ReadBuffer[W25Qxx_NumByteToTest];		//	���������
 CANInstance* can3_instance;
 CANInstance* can1_instance;
 CANInstance* can1_instance2;
+CANInstance* can1_instance3;
 CANInstance* can2_instance;
 extern DMMotorInstance *dmmotor_yaw1;
 extern DMMotorInstance *dmmotor_yaw2;
 extern DMMotorInstance *dmmotor_pitch;
+extern DMMotorInstance *dmmotor_loader;
 
-int a=1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,6 +132,14 @@ void can1_receive2_callback(CANInstance* instance) {
     // instance->rx_len表示接收到的数据长度
     
 	  dm_motor_fbdata(&dmmotor_pitch->measure, instance->rx_buff);
+}
+
+void can1_receive3_callback(CANInstance* instance) {
+    // 在这里处理接收到的数据
+    // 可以通过instance->rx_buff访问接收到的数据
+    // instance->rx_len表示接收到的数据长度
+    
+	  dm_motor_fbdata(&dmmotor_loader->measure, instance->rx_buff);
 }
 void can2_receive_callback(CANInstance* instance) {
     // 在这里处理接收到的数据
@@ -218,6 +227,26 @@ void register2_can1_receiver(uint32_t rx_id) {
     }
 }
 
+void register3_can1_receiver(uint32_t rx_id) {
+    // 定义CAN初始化配置结构体
+    CAN_Init_Config_s can1_config2 = {
+        .can_handle = &hfdcan1,                 // 使用CAN3句柄
+        .tx_id = 0x15,                         // 发送ID（根据需要设置）
+        .rx_id = rx_id,                         // 接收ID
+        .can_module_callback = can1_receive3_callback, // 接收回调函数
+        .id = NULL                              // 可选的模块标识符
+    };
+    
+    // 注册CAN实例
+    CANInstance* can1_instance3 = CANRegister(&can1_config2);
+
+    if (can1_instance3 != NULL) {
+        printf("CAN3 receiver registered successfully\n");
+    } else {
+        printf("Failed to register CAN3 receiver\n");
+    }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -277,6 +306,7 @@ int main(void)
   register_can1_receiver(0x17);
   register_can2_receiver(0x18);
   register2_can1_receiver(0x16);
+  register3_can1_receiver(0x15);
 
   RobotInit(); 
 
